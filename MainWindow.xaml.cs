@@ -36,6 +36,100 @@ namespace FollowTheLeader
 		public ObservableCollection<PlayerData> GroupsDisplayList = new ObservableCollection<PlayerData>();
 		public ObservableCollection<PlayerData> NowPlayingList = new ObservableCollection<PlayerData>();
 
+		bool showSetLeaderComboButton = false;
+		public bool ShowSetLeaderComboButton
+		{
+			get { return showSetLeaderComboButton; }
+			set
+			{
+				showSetLeaderComboButton = value;
+				OnPropertyChanged("ShowSetLeaderComboButton");
+				OnPropertyChanged("SetLeaderComboButtonVisibility");
+			}
+		}
+		public Visibility SetLeaderComboButtonVisibility
+		{
+			get { return ShowSetLeaderComboButton ? Visibility.Visible : Visibility.Hidden; }
+		}
+		public string SetLeaderComboButtonText
+		{
+			get { return "Leader Combo Set"; }
+		}
+		bool showPerformerResultButton1 = false;
+
+		public bool ShowPerformerResultButton1
+		{
+			get { return showPerformerResultButton1; }
+			set
+			{
+				showPerformerResultButton1 = value;
+				OnPropertyChanged("ShowPerformerResultButton1");
+				OnPropertyChanged("ShowPerformerResultButtonVisibility1");
+				OnPropertyChanged("PerformerName1");
+			}
+		}
+		public Visibility ShowPerformerResultButtonVisibility1
+		{
+			get { return ShowPerformerResultButton1 ? Visibility.Visible : Visibility.Hidden; }
+		}
+		string performerName1 = "";
+		public string PerformerName1
+		{
+			get { return performerName1; }
+			set
+			{
+				performerName1 = value;
+				OnPropertyChanged("PerformerName1");
+				OnPropertyChanged("PerformerResultSuccess1");
+				OnPropertyChanged("PerformerResultFail1");
+			}
+		}
+		public string PerformerResultSuccess1
+		{
+			get { return performerName1 + " Hit"; }
+		}
+		public string PerformerResultFail1
+		{
+			get { return performerName1 + " Miss"; }
+		}
+
+		bool showPerformerResultButton2 = false;
+		public bool ShowPerformerResultButton2
+		{
+			get { return showPerformerResultButton2; }
+			set
+			{
+				showPerformerResultButton2 = value;
+				OnPropertyChanged("ShowPerformerResultButton2");
+				OnPropertyChanged("ShowPerformerResultButtonVisibility2");
+				OnPropertyChanged("PerformerName2");
+			}
+		}
+		public Visibility ShowPerformerResultButtonVisibility2
+		{
+			get { return ShowPerformerResultButton2 ? Visibility.Visible : Visibility.Hidden; }
+		}
+		string performerName2 = "";
+		public string PerformerName2
+		{
+			get { return performerName2; }
+			set
+			{
+				performerName2 = value;
+				OnPropertyChanged("PerformerName2");
+				OnPropertyChanged("PerformerResultSuccess2");
+				OnPropertyChanged("PerformerResultFail2");
+			}
+		}
+		public string PerformerResultSuccess2
+		{
+			get { return performerName2 + " Hit"; }
+		}
+		public string PerformerResultFail2
+		{
+			get { return performerName2 + " Miss"; }
+		}
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -45,16 +139,17 @@ namespace FollowTheLeader
 			GroupsDisplayList.Add(new PlayerData("test"));
 		}
 
-		private void SetPlayers_Click(object sender, RoutedEventArgs e)
-		{
-			SetupGroups();
-		}
-
 		private void Window_Loaded(object sender, RoutedEventArgs e)
 		{
+			TopLevelGrid.DataContext = this;
 			AllGroupsItemControl.ItemsSource = GroupsDisplayList;
 			NowPlayingItemControl.ItemsSource = NowPlayingList;
 
+			SetupGroups();
+		}
+
+		private void SetPlayers_Click(object sender, RoutedEventArgs e)
+		{
 			SetupGroups();
 		}
 
@@ -139,7 +234,108 @@ namespace FollowTheLeader
 				NowPlayingList.Add(pd);
 			}
 
-			NowPlayingList[0].IsLeader = true;
+			IncrementLeader();
+		}
+
+		private bool TryGetLeaderIndex(out int outLeaderIndex)
+		{
+			outLeaderIndex = -1;
+			int index = 0;
+			foreach (PlayerData pd in NowPlayingList)
+			{
+				if (pd.IsLeader)
+				{
+					outLeaderIndex = index;
+					break;
+				}
+
+				++index;
+			}
+
+			return outLeaderIndex != -1;
+		}
+
+		private void IncrementLeader()
+		{
+			if (NowPlayingList.Count == 0)
+			{
+				return;
+			}
+			
+			foreach (PlayerData pd in NowPlayingList)
+			{
+				pd.IsLeader = false;
+				pd.IsPerforming = false;
+			}
+
+			int currentLeader;
+			if (TryGetLeaderIndex(out currentLeader))
+			{
+				NowPlayingList[(currentLeader + 1) % NowPlayingList.Count].IsLeader = true;
+			}
+			else
+			{
+				NowPlayingList[0].IsLeader = true;
+			}
+
+			ShowSetLeaderComboButton = true;
+		}
+
+		private void SetPerformers()
+		{
+			int leaderIndex;
+			if (TryGetLeaderIndex(out leaderIndex))
+			{
+				if (NowPlayingList.Count > 1)
+				{
+					PlayerData pd = NowPlayingList[(leaderIndex + 1) % NowPlayingList.Count];
+					pd.IsPerforming = true;
+
+					ShowPerformerResultButton1 = true;
+					PerformerName1 = pd.PlayerName;
+				}
+
+				if (NowPlayingList.Count > 2)
+				{
+					PlayerData pd = NowPlayingList[(leaderIndex + 2) % NowPlayingList.Count];
+					pd.IsPerforming = true;
+
+					ShowPerformerResultButton2 = true;
+					PerformerName2 = pd.PlayerName;
+				}
+			}
+		}
+
+		private void HistoryButton_Click(object sender, RoutedEventArgs e)
+		{
+
+		}
+
+		private void SetLeaderComboButton_Click(object sender, RoutedEventArgs e)
+		{
+			ShowSetLeaderComboButton = false;
+
+			SetPerformers();
+		}
+
+		private void PerformerSuccessButton1_Click(object sender, RoutedEventArgs e)
+		{
+			ShowPerformerResultButton1 = false;
+		}
+
+		private void PerformerFailButton1_Click(object sender, RoutedEventArgs e)
+		{
+			ShowPerformerResultButton1 = false;
+		}
+
+		private void PerformerSuccessButton2_Click(object sender, RoutedEventArgs e)
+		{
+			ShowPerformerResultButton2 = false;
+		}
+
+		private void PerformerFailButton2_Click(object sender, RoutedEventArgs e)
+		{
+			ShowPerformerResultButton2 = false;
 		}
 	}
 
@@ -208,6 +404,7 @@ namespace FollowTheLeader
 			{
 				isPerforming = value;
 				OnPropertyChanged("IsPerforming");
+				OnPropertyChanged("NowPlayingDisplayText");
 			}
 		}
 		bool isCut = false;
@@ -224,7 +421,7 @@ namespace FollowTheLeader
 		{
 			get
 			{
-				return (IsLeader ? "Leader -> " : "") + (IsPerforming ? "Go -> " : "") + PlayerName;
+				return (IsLeader ? "Leader: " : "") + (IsPerforming ? "Go: " : "") + PlayerName;
 			}
 		}
 		int totalPoints = 0;
@@ -307,6 +504,10 @@ namespace FollowTheLeader
 		public string PointsDisplay
 		{
 			get { return "5"; }
+		}
+		public string DisplayText
+		{
+			get { return "Drop"; }
 		}
 
 		public HistoryButton()
