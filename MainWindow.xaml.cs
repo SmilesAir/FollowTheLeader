@@ -23,6 +23,10 @@ namespace FollowTheLeader
 	/// </summary>
 	public partial class MainWindow : Window, INotifyPropertyChanged
 	{
+		///////////// Tunnables ///////////////////////////////////////////////////
+		const int NobodyEverybodySucessPoints = 2;
+		///////////////////////////////////////////////////////////////////////////
+
 		public event PropertyChangedEventHandler PropertyChanged;
 		private void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] String propertyName = "")
 		{
@@ -35,6 +39,8 @@ namespace FollowTheLeader
 		public List<List<List<PlayerData>>> AllGroupsList = new List<List<List<PlayerData>>>();
 		public ObservableCollection<PlayerData> GroupsDisplayList = new ObservableCollection<PlayerData>();
 		public ObservableCollection<PlayerData> NowPlayingList = new ObservableCollection<PlayerData>();
+
+		public int TeamsMakingCut { get { return 3; } }
 
 		bool showSetLeaderComboButton = false;
 		public bool ShowSetLeaderComboButton
@@ -55,79 +61,84 @@ namespace FollowTheLeader
 		{
 			get { return "Leader Combo Set"; }
 		}
-		bool showPerformerResultButton1 = false;
-
-		public bool ShowPerformerResultButton1
+		bool showStartGroupButton = false;
+		public bool ShowStartGroupButton
 		{
-			get { return showPerformerResultButton1; }
+			get { return showStartGroupButton; }
 			set
 			{
-				showPerformerResultButton1 = value;
-				OnPropertyChanged("ShowPerformerResultButton1");
-				OnPropertyChanged("ShowPerformerResultButtonVisibility1");
-				OnPropertyChanged("PerformerName1");
+				showStartGroupButton = value;
+				OnPropertyChanged("ShowStartGroupButton");
+				OnPropertyChanged("StartGroupButtonVisibility");
 			}
 		}
+		public Visibility StartGroupButtonVisibility
+		{
+			get { return showStartGroupButton ? Visibility.Visible : Visibility.Hidden; }
+		}
+
 		public Visibility ShowPerformerResultButtonVisibility1
 		{
-			get { return ShowPerformerResultButton1 ? Visibility.Visible : Visibility.Hidden; }
+			get { return Performer1 != null ? Visibility.Visible : Visibility.Hidden; }
 		}
-		string performerName1 = "";
-		public string PerformerName1
+		PlayerData performer1 = null;
+		public PlayerData Performer1
 		{
-			get { return performerName1; }
+			get { return performer1; }
 			set
 			{
-				performerName1 = value;
+				performer1 = value;
+				OnPropertyChanged("Performer1");
+				OnPropertyChanged("PerformerName1");
 				OnPropertyChanged("PerformerName1");
 				OnPropertyChanged("PerformerResultSuccess1");
 				OnPropertyChanged("PerformerResultFail1");
+				OnPropertyChanged("ShowPerformerResultButtonVisibility1");
 			}
+		}
+		public string PerformerName1
+		{
+			get { return Performer1 != null ? Performer1.PlayerName : ""; }
 		}
 		public string PerformerResultSuccess1
 		{
-			get { return performerName1 + " Hit"; }
+			get { return PerformerName1 + " Hit"; }
 		}
 		public string PerformerResultFail1
 		{
-			get { return performerName1 + " Miss"; }
+			get { return PerformerName1 + " Miss"; }
 		}
-
-		bool showPerformerResultButton2 = false;
-		public bool ShowPerformerResultButton2
-		{
-			get { return showPerformerResultButton2; }
-			set
-			{
-				showPerformerResultButton2 = value;
-				OnPropertyChanged("ShowPerformerResultButton2");
-				OnPropertyChanged("ShowPerformerResultButtonVisibility2");
-				OnPropertyChanged("PerformerName2");
-			}
-		}
+		
 		public Visibility ShowPerformerResultButtonVisibility2
 		{
-			get { return ShowPerformerResultButton2 ? Visibility.Visible : Visibility.Hidden; }
+			get { return Performer2 != null ? Visibility.Visible : Visibility.Hidden; }
 		}
-		string performerName2 = "";
-		public string PerformerName2
+		PlayerData performer2 = null;
+		public PlayerData Performer2
 		{
-			get { return performerName2; }
+			get { return performer2; }
 			set
 			{
-				performerName2 = value;
+				performer2 = value;
+				OnPropertyChanged("Performer2");
+				OnPropertyChanged("PerformerName2");
 				OnPropertyChanged("PerformerName2");
 				OnPropertyChanged("PerformerResultSuccess2");
 				OnPropertyChanged("PerformerResultFail2");
+				OnPropertyChanged("ShowPerformerResultButtonVisibility2");
 			}
+		}
+		public string PerformerName2
+		{
+			get { return Performer2 != null ? Performer2.PlayerName : ""; }
 		}
 		public string PerformerResultSuccess2
 		{
-			get { return performerName2 + " Hit"; }
+			get { return PerformerName2 + " Hit"; }
 		}
 		public string PerformerResultFail2
 		{
-			get { return performerName2 + " Miss"; }
+			get { return PerformerName2 + " Miss"; }
 		}
 
 		public MainWindow()
@@ -170,60 +181,122 @@ namespace FollowTheLeader
 				}
 			}
 			
+			AllGroupsList.Clear();
+
+			AddGroups(players);
+
+			// Testing
+			SelectGroup(0, 0);
+		}
+
+		private void AddGroups(List<string> players)
+		{
 			int numGroups = (players.Count + 2) / 5;
 
-			AllGroupsList.Clear();
+			int roundIndex = AllGroupsList.Count;
 			AllGroupsList.Add(new List<List<PlayerData>>());
 
 			for (int i = 0; i < numGroups; ++i)
 			{
-				AllGroupsList[0].Add(new List<PlayerData>());
+				AllGroupsList[roundIndex].Add(new List<PlayerData>());
 			}
 
 			for (int i = 0, groupIndex = 0; i < players.Count; ++i, ++groupIndex)
 			{
 				groupIndex = groupIndex % numGroups;
 
-				AllGroupsList[0][groupIndex].Add(new PlayerData(players[i]));
+				AllGroupsList[roundIndex][groupIndex].Add(new PlayerData(players[i]));
 			}
 
 			GroupsDisplayList.Clear();
 
 			int displayGroupIndex = 1;
-			foreach (List<PlayerData> group in AllGroupsList[0])
+			foreach (List<List<PlayerData>> round in AllGroupsList)
 			{
-				GroupsDisplayList.Add(new PlayerData("Group " + displayGroupIndex));
-
-				foreach (PlayerData pd in group)
+				foreach (List<PlayerData> group in round)
 				{
-					GroupsDisplayList.Add(pd);
+					PlayerData groupData = new PlayerData("Group " + displayGroupIndex);
+					groupData.Round = roundIndex;
+
+					GroupsDisplayList.Add(groupData);
+
+					foreach (PlayerData pd in group)
+					{
+						GroupsDisplayList.Add(pd);
+					}
+
+					++displayGroupIndex;
 				}
-
-				++displayGroupIndex;
 			}
-
-			// Testing
-			StartGroup(0, 0);
 		}
 
-		private void StartGroup_Click(object sender, RoutedEventArgs e)
+		private void AddGroups()
+		{
+			List<KeyValuePair<int, string>> results = new List<KeyValuePair<int, string>>();
+			foreach (List<PlayerData> group in AllGroupsList.Last())
+			{
+				foreach (PlayerData pd in group)
+				{
+					if (!pd.IsCut)
+					{
+						results.Add(new KeyValuePair<int, string>(pd.RoundPoints, pd.PlayerName));
+					}
+				}
+			}
+
+			results.Sort((KeyValuePair<int, string> a, KeyValuePair<int, string> b) =>
+			{
+				if (a.Key == b.Key)
+				{
+					return 0;
+				}
+				else if (a.Key > b.Key)
+				{
+					return -1;
+				}
+				else
+				{
+					return 1;
+				}
+			});
+
+			List<string> players = new List<string>();
+			foreach (KeyValuePair<int, string> result in results)
+			{
+				players.Add(result.Value);
+			}
+
+			AddGroups(players);
+		}
+
+		private void SelectGroup_Click(object sender, RoutedEventArgs e)
 		{
 			PlayerData pd = (sender as Button).Tag as PlayerData;
 
-			StartGroup(pd);
+			SelectGroup(pd);
 		}
 
-		private void StartGroup(PlayerData pd)
+		private int GetGroupIndex(int rawGroupIndex, int round)
+		{
+			for (int i = 0; i < round; ++i)
+			{
+				rawGroupIndex -= AllGroupsList[i].Count;
+			}
+
+			return rawGroupIndex - 1;
+		}
+
+		private void SelectGroup(PlayerData pd)
 		{
 			string groupNumString = pd.PlayerName.Replace("Group ", "");
 			int groupIndex = 0;
 			if (int.TryParse(groupNumString, out groupIndex))
 			{
-				StartGroup(groupIndex - 1, pd.Round);
+				SelectGroup(GetGroupIndex(groupIndex, pd.Round), pd.Round);
 			}
 		}
 
-		private void StartGroup(int groupIndex, int roundIndex)
+		private void SelectGroup(int groupIndex, int roundIndex)
 		{
 			NowPlayingList.Clear();
 
@@ -234,7 +307,7 @@ namespace FollowTheLeader
 				NowPlayingList.Add(pd);
 			}
 
-			IncrementLeader();
+			ShowStartGroupButton = true;
 		}
 
 		private bool TryGetLeaderIndex(out int outLeaderIndex)
@@ -255,28 +328,43 @@ namespace FollowTheLeader
 			return outLeaderIndex != -1;
 		}
 
+		private PlayerData GetLeader()
+		{
+			int leaderIndex;
+			if (TryGetLeaderIndex(out leaderIndex))
+			{
+				return NowPlayingList[leaderIndex];
+			}
+
+			return null;
+		}
+
 		private void IncrementLeader()
 		{
 			if (NowPlayingList.Count == 0)
 			{
 				return;
 			}
-			
+
+			int currentLeader;
+			if (TryGetLeaderIndex(out currentLeader))
+			{
+				currentLeader = (currentLeader + 1) % NowPlayingList.Count;
+			}
+			else
+			{
+				currentLeader = 0;
+			}
+
 			foreach (PlayerData pd in NowPlayingList)
 			{
 				pd.IsLeader = false;
 				pd.IsPerforming = false;
 			}
 
-			int currentLeader;
-			if (TryGetLeaderIndex(out currentLeader))
-			{
-				NowPlayingList[(currentLeader + 1) % NowPlayingList.Count].IsLeader = true;
-			}
-			else
-			{
-				NowPlayingList[0].IsLeader = true;
-			}
+			PlayerData leader = NowPlayingList[currentLeader];
+			leader.IsLeader = true;
+			leader.AddHistoryButton(EHistoryButtonState.LeaderSet);
 
 			ShowSetLeaderComboButton = true;
 		}
@@ -290,20 +378,279 @@ namespace FollowTheLeader
 				{
 					PlayerData pd = NowPlayingList[(leaderIndex + 1) % NowPlayingList.Count];
 					pd.IsPerforming = true;
-
-					ShowPerformerResultButton1 = true;
-					PerformerName1 = pd.PlayerName;
+					
+					Performer1 = pd;
+					pd.AddHistoryButton(EHistoryButtonState.PerformerGo);
 				}
 
 				if (NowPlayingList.Count > 2)
 				{
 					PlayerData pd = NowPlayingList[(leaderIndex + 2) % NowPlayingList.Count];
 					pd.IsPerforming = true;
-
-					ShowPerformerResultButton2 = true;
-					PerformerName2 = pd.PlayerName;
+					
+					Performer2 = pd;
+					pd.AddHistoryButton(EHistoryButtonState.PerformerGo);
 				}
 			}
+		}
+
+		private void UpdateNowPlaying()
+		{
+			if (Performer1 == null || Performer2 == null)
+			{
+				int leaderIndex;
+				if (TryGetLeaderIndex(out leaderIndex))
+				{
+					PlayerData leader = NowPlayingList[leaderIndex];
+
+					for (int i = 1; i < NowPlayingList.Count; ++i)
+					{
+						PlayerData pd = NowPlayingList[(leaderIndex + i) % NowPlayingList.Count];
+
+						if (pd.HistoryButtons.Count < leader.HistoryButtons.Count)
+						{
+							pd.IsPerforming = true;
+							pd.AddHistoryButton(EHistoryButtonState.PerformerGo);
+
+							if (Performer1 == null)
+							{
+								Performer1 = pd;
+							}
+							else
+							{
+								Performer2 = pd;
+							}
+
+							if (Performer1 != null && Performer2 != null)
+							{
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (Performer1 == null && Performer2 == null)
+			{
+				FinishCycle();
+
+				PlayerData leader = GetLeader();
+				if (leader != null && leader.HistoryButtons.Count >= NowPlayingList.Count)
+				{
+					TryFinishGroup();
+				}
+				else
+				{
+					IncrementLeader();
+				}
+			}
+		}
+
+		private void FinishCycle()
+		{
+			AwardCyclePoints();
+		}
+
+		private void AwardCyclePoints()
+		{
+			int successCount = 0;
+			foreach (PlayerData pd in NowPlayingList)
+			{
+				successCount += pd.GetLastResult() ? 1 : 0;
+			}
+
+			PlayerData leader = GetLeader();
+			int playerCount = NowPlayingList.Count;
+
+			if (successCount == 1)
+			{
+				leader.AwardPoints(playerCount);
+				AwardSuccesfulPerformerPoints(playerCount);
+			}
+			else if (successCount == 0 || successCount == playerCount - 1)
+			{
+				leader.AwardPoints(0);
+
+				foreach (PlayerData pd in NowPlayingList)
+				{
+					if (!pd.IsLeader)
+					{
+						pd.AwardPoints(NobodyEverybodySucessPoints);
+					}
+				}
+			}
+			else
+			{
+				int points = playerCount - successCount;
+
+				leader.AwardPoints(points);
+				AwardSuccesfulPerformerPoints(points);
+			}
+		}
+
+		private void AwardSuccesfulPerformerPoints(int points)
+		{
+			foreach (PlayerData pd in NowPlayingList)
+			{
+				if (pd.GetLastResult())
+				{
+					pd.AwardPoints(points);
+				}
+			}
+		}
+
+		private List<int> GetSortedScores()
+		{
+			List<int> sortedScores = new List<int>();
+			foreach (PlayerData pd in NowPlayingList)
+			{
+				sortedScores.Add(pd.RoundPoints);
+			}
+
+			sortedScores.Sort((int a, int b) => {
+				if (a == b)
+				{
+					return 0;
+				}
+				else if (a > b)
+				{
+					return -1;
+				}
+				else
+				{
+					return 1;
+				}
+			});
+
+			return sortedScores;
+		}
+
+		private void TryFinishGroup()
+		{
+			if (CheckIsFinalRound())
+			{
+				if (CheckGameFinished())
+				{
+					List<PlayerData> finalGroup = AllGroupsList.Last().Last();
+
+					finalGroup.Sort((PlayerData a, PlayerData b) =>
+					{
+						if (a.RoundPoints == b.RoundPoints)
+						{
+							return 0;
+						}
+						else if (a.RoundPoints > b.RoundPoints)
+						{
+							return -1;
+						}
+						else
+						{
+							return 1;
+						}
+					});
+
+					for (int i = 0; i < 3 && i < finalGroup.Count; ++i)
+					{
+						PlayerData pd = finalGroup[i];
+
+						pd.FinishPlace = i + 1;
+					}
+
+					NowPlayingList.Clear();
+					foreach (PlayerData pd in finalGroup)
+					{
+						pd.IsLeader = false;
+
+						NowPlayingList.Add(pd);
+					}
+				}
+				else
+				{
+					IncrementLeader();
+				}
+			}
+			else if (NowPlayingList.Count > TeamsMakingCut)
+			{
+				List<int> sortedScores = GetSortedScores();
+
+				int cutScore = 0;
+				if (sortedScores[TeamsMakingCut] != sortedScores[TeamsMakingCut - 1])
+				{
+					cutScore = sortedScores[TeamsMakingCut - 1];
+
+					foreach (PlayerData pd in NowPlayingList)
+					{
+						if (pd.RoundPoints < cutScore)
+						{
+							pd.IsCut = true;
+						}
+						else
+						{
+							++pd.Round;
+						}
+					}
+
+					if (CheckRoundFinished())
+					{
+						AddGroups();
+					}
+				}
+				else
+				{
+					IncrementLeader();
+				}
+			}
+		}
+
+		private bool CheckRoundFinished()
+		{
+			foreach (List<PlayerData> group in AllGroupsList.Last())
+			{
+				int cutCount = 0;
+				foreach (PlayerData pd in group)
+				{
+					cutCount += pd.IsCut ? 1 : 0;
+				}
+
+				if (group.Count - cutCount > TeamsMakingCut)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private bool CheckIsFinalRound()
+		{
+			return AllGroupsList.Count > 0 && AllGroupsList.Last().Count == 1;
+		}
+
+		private bool CheckGameFinished()
+		{
+			if (CheckIsFinalRound())
+			{
+				List<int> sortedScores = GetSortedScores();
+				List<int> topScores = new List<int>();
+				bool topThreeDifferent = true;
+
+				for (int i = 0; i < 4 && i < sortedScores.Count; ++i)
+				{
+					if (topScores.Contains(sortedScores[i]))
+					{
+						topThreeDifferent = false;
+						break;
+					}
+					else
+					{
+						topScores.Add(sortedScores[i]);
+					}
+				}
+
+				return topThreeDifferent;
+			}
+
+			return false;
 		}
 
 		private void HistoryButton_Click(object sender, RoutedEventArgs e)
@@ -315,27 +662,56 @@ namespace FollowTheLeader
 		{
 			ShowSetLeaderComboButton = false;
 
-			SetPerformers();
+			UpdateNowPlaying();
+
+			PlayerData leader = GetLeader();
+			if (leader != null)
+			{
+				leader.SetLeaderCombo();
+			}
 		}
 
 		private void PerformerSuccessButton1_Click(object sender, RoutedEventArgs e)
 		{
-			ShowPerformerResultButton1 = false;
+			Performer1.SetPerformerResult(true);
+
+			Performer1 = null;
+
+			UpdateNowPlaying();
 		}
 
 		private void PerformerFailButton1_Click(object sender, RoutedEventArgs e)
 		{
-			ShowPerformerResultButton1 = false;
+			Performer1.SetPerformerResult(false);
+
+			Performer1 = null;
+
+			UpdateNowPlaying();
 		}
 
 		private void PerformerSuccessButton2_Click(object sender, RoutedEventArgs e)
 		{
-			ShowPerformerResultButton2 = false;
+			Performer2.SetPerformerResult(true);
+
+			Performer2 = null;
+
+			UpdateNowPlaying();
 		}
 
 		private void PerformerFailButton2_Click(object sender, RoutedEventArgs e)
 		{
-			ShowPerformerResultButton2 = false;
+			Performer2.SetPerformerResult(false);
+
+			Performer2 = null;
+
+			UpdateNowPlaying();
+		}
+
+		private void StartGroupButton_Click(object sender, RoutedEventArgs e)
+		{
+			ShowStartGroupButton = false;
+
+			IncrementLeader();
 		}
 	}
 
@@ -359,6 +735,7 @@ namespace FollowTheLeader
 				playerName = value;
 				OnPropertyChanged("PlayerName");
 				OnPropertyChanged("DisplayText");
+				OnPropertyChanged("NowPlayingDisplayText");
 			}
 		}
 		public string DisplayText
@@ -373,6 +750,16 @@ namespace FollowTheLeader
 		{
 			get
 			{
+				switch (FinishPlace)
+				{
+					case 1:
+						return Brushes.Gold;
+					case 2:
+						return Brushes.DarkGray;
+					case 3:
+						return Brushes.Peru;
+				}
+
 				if (IsGroup)
 				{
 					return Brushes.LightGray;
@@ -380,6 +767,10 @@ namespace FollowTheLeader
 				else if (PlayerName.StartsWith("Round"))
 				{
 					return Brushes.LightBlue;
+				}
+				else if (IsCut)
+				{
+					return Brushes.OrangeRed;
 				}
 
 
@@ -415,6 +806,7 @@ namespace FollowTheLeader
 			{
 				isCut = value;
 				OnPropertyChanged("IsCut");
+				OnPropertyChanged("BgColor");
 			}
 		}
 		public string NowPlayingDisplayText
@@ -447,6 +839,7 @@ namespace FollowTheLeader
 			{
 				roundPoints = value;
 				OnPropertyChanged("RoundPoints");
+				OnPropertyChanged("RoundPointsDisplay");
 			}
 		}
 		public string RoundPointsDisplay
@@ -463,8 +856,19 @@ namespace FollowTheLeader
 			get { return round; }
 			set
 			{
-				Round = value;
+				round = value;
 				OnPropertyChanged("Round");
+			}
+		}
+		int finishPlace = 0;
+		public int FinishPlace
+		{
+			get { return finishPlace; }
+			set
+			{
+				finishPlace = value;
+				OnPropertyChanged("FinishPlace");
+				OnPropertyChanged("BgColor");
 			}
 		}
 		ObservableCollection<HistoryButton> historyButtons = new ObservableCollection<HistoryButton>();
@@ -479,14 +883,78 @@ namespace FollowTheLeader
 		{
 			playerName = inName;
 
-			HistoryButtons.Add(new HistoryButton());
-			HistoryButtons.Add(new HistoryButton());
+			historyButtons.Add(new HistoryButton(EHistoryButtonState.PerformerPoints));
+			historyButtons.Add(new HistoryButton(EHistoryButtonState.PerformerPoints));
+			historyButtons.Add(new HistoryButton(EHistoryButtonState.PerformerPoints));
+			historyButtons.Add(new HistoryButton(EHistoryButtonState.PerformerPoints));
 		}
 
 		public PlayerData(string inName, int inRound)
 		{
 			playerName = inName;
 			Round = inRound;
+		}
+
+		public void AddHistoryButton(EHistoryButtonState state)
+		{
+			historyButtons.Add(new HistoryButton(state));
+		}
+
+		public void SetLeaderCombo()
+		{
+			if (HistoryButtons.Count == 0)
+			{
+				return;
+			}
+
+			HistoryButton hb = historyButtons.Last();
+			if (hb.State == EHistoryButtonState.LeaderSet)
+			{
+				hb.State = EHistoryButtonState.LeaderWaiting;
+			}
+		}
+
+		public void SetPerformerResult(bool success)
+		{
+			if (HistoryButtons.Count == 0)
+			{
+				return;
+			}
+
+			HistoryButton hb = historyButtons.Last();
+			if (hb.State == EHistoryButtonState.PerformerGo)
+			{
+				hb.State = EHistoryButtonState.PerformerPoints;
+				hb.Success = success;
+
+				IsPerforming = false;
+			}
+		}
+
+		public bool GetLastResult()
+		{
+			return historyButtons.Count > 0 && historyButtons.Last().Success;
+		}
+
+		public void AwardPoints(int points)
+		{
+			TotalPoints += points; // fix this to just calculate the sum of all HistoryButton
+			RoundPoints += points;
+
+			if (historyButtons.Count > 0)
+			{
+				HistoryButton hb = historyButtons.Last();
+				hb.Points = points;
+
+				if (IsLeader)
+				{
+					hb.State = EHistoryButtonState.LeaderPoints;
+				}
+				else
+				{
+					hb.State = EHistoryButtonState.PerformerPoints;
+				}
+			}
 		}
 	}
 
@@ -501,13 +969,60 @@ namespace FollowTheLeader
 			}
 		}
 
+		EHistoryButtonState state = EHistoryButtonState.LeaderPoints;
+		public EHistoryButtonState State
+		{
+			get { return state; }
+			set
+			{
+				state = value;
+				OnPropertyChanged("State");
+				OnPropertyChanged("DisplayText");
+			}
+		}
+		int points = 0;
+		public int Points
+		{
+			get { return points; }
+			set
+			{
+				points = value;
+				OnPropertyChanged("Points");
+				OnPropertyChanged("DisplayText");
+			}
+		}
+		bool success = false;
+		public bool Success
+		{
+			get { return success; }
+			set
+			{
+				success = value;
+				OnPropertyChanged("Success");
+			}
+		}
+
+
 		public string PointsDisplay
 		{
 			get { return "5"; }
 		}
 		public string DisplayText
 		{
-			get { return "Drop"; }
+			get
+			{
+				switch (State)
+				{
+					case EHistoryButtonState.LeaderSet:
+						return "Set Combo";
+					case EHistoryButtonState.LeaderWaiting:
+						return "Waiting";
+					case EHistoryButtonState.PerformerGo:
+						return "Go";
+				}
+
+				return Points.ToString();
+			}
 		}
 
 		public HistoryButton()
@@ -515,5 +1030,19 @@ namespace FollowTheLeader
 
 		}
 
+		public HistoryButton(EHistoryButtonState inState)
+		{
+			State = inState;
+		}
+
+	}
+
+	public enum EHistoryButtonState
+	{
+		LeaderSet,
+		LeaderWaiting,
+		LeaderPoints,
+		PerformerGo,
+		PerformerPoints
 	}
 }

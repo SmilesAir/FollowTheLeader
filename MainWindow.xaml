@@ -44,7 +44,8 @@
                         </Viewbox>
 
                         <Button Grid.Column="1" Grid.RowSpan="2" Content="{Binding SetLeaderComboButtonText}" Visibility="{Binding SetLeaderComboButtonVisibility}" Click="SetLeaderComboButton_Click"/>
-
+                        <Button Grid.Column="1" Grid.RowSpan="2" Content="Start Group" Visibility="{Binding StartGroupButtonVisibility}" Click="StartGroupButton_Click"/>
+                        
                         <Button Grid.Column="1" Content="{Binding PerformerResultSuccess1}" Visibility="{Binding ShowPerformerResultButtonVisibility1}" Click="PerformerSuccessButton1_Click"/>
                         <Button Grid.Column="1" Grid.Row="1" Content="{Binding PerformerResultFail1}" Visibility="{Binding ShowPerformerResultButtonVisibility1}" Click="PerformerFailButton1_Click"/>
                         <Button Grid.Column="2" Content="{Binding PerformerResultSuccess2}" Visibility="{Binding ShowPerformerResultButtonVisibility2}" Click="PerformerSuccessButton2_Click"/>
@@ -54,7 +55,7 @@
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width=".25*"/>
+                            <ColumnDefinition Width=".1*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
@@ -63,12 +64,13 @@
                             <RowDefinition Height="8*"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Background="Bisque" Grid.ColumnSpan="2">
+                        <Grid Background="Bisque">
                             <Viewbox>
                                 <TextBlock Text="Now Playing"/>
                             </Viewbox>
                         </Grid>
 
+                        <Border Grid.Column="1" Grid.RowSpan="2" BorderBrush="Black" BorderThickness="3"/>
 
                         <Grid Grid.Column="2" Background="Bisque">
                             <Viewbox>
@@ -76,7 +78,8 @@
                             </Viewbox>
                         </Grid>
 
-                        <ItemsControl Grid.Row="1" Name="NowPlayingItemControl" HorizontalContentAlignment="Stretch">
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl Name="NowPlayingItemControl" HorizontalContentAlignment="Stretch">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="DarkGray" BorderThickness="5" Margin="3,3,3,0">
@@ -98,7 +101,7 @@
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <ToggleButton Content="{Binding DisplayText}" Click="HistoryButton_Click" Tag="{Binding}"/>
+                                                            <ToggleButton Content="{Binding DisplayText}" IsChecked="{Binding Success}" Click="HistoryButton_Click" Tag="{Binding}"/>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -110,6 +113,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        </ScrollViewer>
 
                         <ScrollViewer Grid.Row="1" Grid.Column="2">
                             <ItemsControl Name="AllGroupsItemControl" HorizontalContentAlignment="Stretch">
@@ -124,7 +128,7 @@
                                                 
                                                 <Label Content="{Binding DisplayText}" FontSize="30"/>
                                                 <Label Grid.Column="1" Content="{Binding TotalPointsDisplay}" FontSize="30" HorizontalContentAlignment="Right"/>
-                                                <Button Grid.Column="1" Tag="{Binding}" Margin="10,2,2,2" Visibility="{Binding SetGroupButtonVisibility}" Click="StartGroup_Click">Start</Button>
+                                                <Button Grid.Column="1" Tag="{Binding}" Margin="10,2,2,2" Visibility="{Binding SetGroupButtonVisibility}" Click="SelectGroup_Click">Select</Button>
                                             </Grid>
                                         </Grid>
                                     </DataTemplate>
