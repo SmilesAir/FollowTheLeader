@@ -40,7 +40,7 @@
                         </Grid.RowDefinitions>
                         
                         <Viewbox Grid.RowSpan="2">
-                            <TextBlock Text="Instructions Here"/>
+                            <TextBlock Text="{Binding InstructionsDisplay}"/>
                         </Viewbox>
 
                         <Button Grid.Column="1" Grid.RowSpan="2" Content="{Binding SetLeaderComboButtonText}" Visibility="{Binding SetLeaderComboButtonVisibility}" Click="SetLeaderComboButton_Click"/>
@@ -86,14 +86,14 @@
                                         <Grid>
                                             <Grid Background="{Binding BgColor}">
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="1.5*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                             
                                                 <Label Content="{Binding NowPlayingDisplayText}" FontSize="80"/>
 
-                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding HistoryButtons}" HorizontalAlignment="Right">
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding HistoryButtons}" HorizontalAlignment="Left">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
                                                             <StackPanel Orientation="Horizontal"/>
@@ -101,7 +101,7 @@
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <ToggleButton Content="{Binding DisplayText}" IsChecked="{Binding Success}" Click="HistoryButton_Click" Tag="{Binding}"/>
+                                                                <ToggleButton Content="{Binding DisplayText}" FontSize="80" Foreground="{Binding TextColor}" IsChecked="{Binding Success}" Click="HistoryButton_Click" Tag="{Binding}"/>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>

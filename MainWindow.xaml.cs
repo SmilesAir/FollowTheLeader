@@ -141,6 +141,17 @@ namespace FollowTheLeader
 			get { return PerformerName2 + " Miss"; }
 		}
 
+		string instructionsDisplay = "Setup Groups";
+		public string InstructionsDisplay
+		{
+			get { return instructionsDisplay; }
+			set
+			{
+				instructionsDisplay = value;
+				OnPropertyChanged("InstructionsDisplay");
+			}
+		}
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -308,6 +319,8 @@ namespace FollowTheLeader
 			}
 
 			ShowStartGroupButton = true;
+
+			InstructionsDisplay = "Click Start Group -->";
 		}
 
 		private bool TryGetLeaderIndex(out int outLeaderIndex)
@@ -367,31 +380,8 @@ namespace FollowTheLeader
 			leader.AddHistoryButton(EHistoryButtonState.LeaderSet);
 
 			ShowSetLeaderComboButton = true;
-		}
 
-		private void SetPerformers()
-		{
-			int leaderIndex;
-			if (TryGetLeaderIndex(out leaderIndex))
-			{
-				if (NowPlayingList.Count > 1)
-				{
-					PlayerData pd = NowPlayingList[(leaderIndex + 1) % NowPlayingList.Count];
-					pd.IsPerforming = true;
-					
-					Performer1 = pd;
-					pd.AddHistoryButton(EHistoryButtonState.PerformerGo);
-				}
-
-				if (NowPlayingList.Count > 2)
-				{
-					PlayerData pd = NowPlayingList[(leaderIndex + 2) % NowPlayingList.Count];
-					pd.IsPerforming = true;
-					
-					Performer2 = pd;
-					pd.AddHistoryButton(EHistoryButtonState.PerformerGo);
-				}
-			}
+			InstructionsDisplay = "Leader " + leader.PlayerName + " set combo";
 		}
 
 		private void UpdateNowPlaying()
@@ -443,6 +433,15 @@ namespace FollowTheLeader
 				{
 					IncrementLeader();
 				}
+			}
+			else
+			{
+				bool multiplePerformers = Performer1 != null && Performer2 != null;
+
+				InstructionsDisplay = "Performer" + (multiplePerformers ? "s " : " ") +
+					(Performer1 != null ? Performer1.PlayerName : "") +
+					(multiplePerformers ? " and " : "") +
+					(Performer2 != null ? Performer2.PlayerName : "");
 			}
 		}
 
@@ -563,6 +562,8 @@ namespace FollowTheLeader
 
 						NowPlayingList.Add(pd);
 					}
+
+					InstructionsDisplay = "Finished. Congrats " + finalGroup[0].PlayerName + "!!!";
 				}
 				else
 				{
@@ -588,12 +589,16 @@ namespace FollowTheLeader
 						{
 							++pd.Round;
 						}
+
+						pd.IsLeader = false;
 					}
 
 					if (CheckRoundFinished())
 					{
 						AddGroups();
 					}
+
+					InstructionsDisplay = "Select Next Group";
 				}
 				else
 				{
@@ -785,6 +790,7 @@ namespace FollowTheLeader
 			{
 				isLeader = value;
 				OnPropertyChanged("IsLeader");
+				OnPropertyChanged("NowPlayingDisplayText");
 			}
 		}
 		bool isPerforming = false;
@@ -1014,14 +1020,31 @@ namespace FollowTheLeader
 				switch (State)
 				{
 					case EHistoryButtonState.LeaderSet:
-						return "Set Combo";
+						return "Go";
 					case EHistoryButtonState.LeaderWaiting:
-						return "Waiting";
+						return "Wait";
 					case EHistoryButtonState.PerformerGo:
 						return "Go";
 				}
 
 				return Points.ToString();
+			}
+		}
+		public Brush TextColor
+		{
+			get
+			{
+				switch (State)
+				{
+					case EHistoryButtonState.LeaderPoints:
+						return Brushes.DarkOrange;
+					case EHistoryButtonState.LeaderSet:
+						return Brushes.DarkOrange;
+					case EHistoryButtonState.LeaderWaiting:
+						return Brushes.DarkOrange;
+				}
+
+				return Brushes.Black;
 			}
 		}
 
