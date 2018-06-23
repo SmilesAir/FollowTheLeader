@@ -8,9 +8,22 @@
         Title="Follow the Leader" Height="600" Width="800"
         Loaded="Window_Loaded"
         WindowState="Maximized"
+        Closing="FollowWindow_Closing"
         Name="FollowWindow">
     <Grid Name="TopLevelGrid">
-        <TabControl SelectedIndex="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Menu>
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" Click="MenuItem_Load"/>
+                <MenuItem Header="_Save" Click="MenuItem_Save"/>
+            </MenuItem>
+        </Menu>
+        
+        <TabControl Grid.Row="1" SelectedIndex="1">
             <TabItem Header="Setup">
                 <Grid>
                     <Grid.RowDefinitions>

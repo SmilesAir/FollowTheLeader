@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Serialization;
 
 namespace FollowTheLeader
 {
@@ -36,7 +37,16 @@ namespace FollowTheLeader
 			}
 		}
 
-		public List<List<List<PlayerData>>> AllGroupsList = new List<List<List<PlayerData>>>();
+		SaveDataContainer SaveData = new SaveDataContainer();
+		public List<List<List<PlayerData>>> AllGroupsList
+		{
+			get { return SaveData.AllGroupsList; }
+			set
+			{
+				SaveData.AllGroupsList = value;
+				OnPropertyChanged("AllGroupsList");
+			}
+		}
 		public ObservableCollection<PlayerData> GroupsDisplayList = new ObservableCollection<PlayerData>();
 		public ObservableCollection<PlayerData> NowPlayingList = new ObservableCollection<PlayerData>();
 
@@ -152,6 +162,11 @@ namespace FollowTheLeader
 			}
 		}
 
+		public string CurrentDirectory
+		{
+			get { return System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location); }
+		}
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -219,26 +234,7 @@ namespace FollowTheLeader
 				AllGroupsList[roundIndex][groupIndex].Add(new PlayerData(players[i]));
 			}
 
-			GroupsDisplayList.Clear();
-
-			int displayGroupIndex = 1;
-			foreach (List<List<PlayerData>> round in AllGroupsList)
-			{
-				foreach (List<PlayerData> group in round)
-				{
-					PlayerData groupData = new PlayerData("Group " + displayGroupIndex);
-					groupData.Round = roundIndex;
-
-					GroupsDisplayList.Add(groupData);
-
-					foreach (PlayerData pd in group)
-					{
-						GroupsDisplayList.Add(pd);
-					}
-
-					++displayGroupIndex;
-				}
-			}
+			RefreshGroups();
 		}
 
 		private void AddGroups()
@@ -278,6 +274,33 @@ namespace FollowTheLeader
 			}
 
 			AddGroups(players);
+		}
+
+		private void RefreshGroups()
+		{
+			GroupsDisplayList.Clear();
+
+			int displayGroupIndex = 1;
+			int roundIndex = 0;
+			foreach (List<List<PlayerData>> round in AllGroupsList)
+			{
+				foreach (List<PlayerData> group in round)
+				{
+					PlayerData groupData = new PlayerData("Group " + displayGroupIndex);
+					groupData.Round = roundIndex;
+
+					GroupsDisplayList.Add(groupData);
+
+					foreach (PlayerData pd in group)
+					{
+						GroupsDisplayList.Add(pd);
+					}
+
+					++displayGroupIndex;
+				}
+
+				++roundIndex;
+			}
 		}
 
 		private void SelectGroup_Click(object sender, RoutedEventArgs e)
@@ -386,6 +409,8 @@ namespace FollowTheLeader
 
 		private void UpdateNowPlaying()
 		{
+			Save();
+
 			if (Performer1 == null || Performer2 == null)
 			{
 				int leaderIndex;
@@ -717,6 +742,77 @@ namespace FollowTheLeader
 			ShowStartGroupButton = false;
 
 			IncrementLeader();
+		}
+
+		private void Save()
+		{
+			try
+			{
+				if (!Directory.Exists("Saves"))
+				{
+					Directory.CreateDirectory("Saves");
+				}
+
+				XmlSerializer serializer = new XmlSerializer(typeof(SaveDataContainer));
+				using (StringWriter retString = new StringWriter())
+				{
+					serializer.Serialize(retString, SaveData);
+
+					string curDir = CurrentDirectory + @"\Saves\" + DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss") + ".xml";
+
+					using (StreamWriter saveFile = new StreamWriter(curDir))
+					{
+						saveFile.Write(retString.ToString());
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show("Failed to Save.\r\n" + e.Message, "Attention!");
+			}
+		}
+
+		private void Load(string filename)
+		{
+			if (File.Exists(filename))
+			{
+				SaveData.Clear();
+				NowPlayingList.Clear();
+
+				using (StreamReader saveFile = new StreamReader(filename))
+				{
+					XmlSerializer serializer = new XmlSerializer(typeof(SaveDataContainer));
+					SaveData = (SaveDataContainer)serializer.Deserialize(saveFile);
+
+					RefreshGroups();
+
+					OnPropertyChanged("");
+				}
+			}
+		}
+
+		private void FollowWindow_Closing(object sender, CancelEventArgs e)
+		{
+			Save();
+		}
+
+		private void MenuItem_Save(object sender, RoutedEventArgs e)
+		{
+			Save();
+		}
+
+		private void MenuItem_Load(object sender, RoutedEventArgs e)
+		{
+			Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
+			ofd.DefaultExt = ".xml";
+			ofd.Filter = "XML Files (*.xml)|*.xml";
+			ofd.Multiselect = false;
+			ofd.InitialDirectory = CurrentDirectory + @"\Saves\";
+
+			if (ofd.ShowDialog() == true)
+			{
+				Load(ofd.FileName);
+			}
 		}
 	}
 
@@ -1067,5 +1163,19 @@ namespace FollowTheLeader
 		LeaderPoints,
 		PerformerGo,
 		PerformerPoints
+	}
+
+	public class SaveDataContainer
+	{
+		public List<List<List<PlayerData>>> AllGroupsList = new List<List<List<PlayerData>>>();
+
+		public SaveDataContainer()
+		{
+		}
+
+		public void Clear()
+		{
+			AllGroupsList.Clear();
+		}
 	}
 }
