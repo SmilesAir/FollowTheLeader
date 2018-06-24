@@ -140,7 +140,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 
                                                 <Label Content="{Binding DisplayText}" FontSize="30"/>
-                                                <Label Grid.Column="1" Content="{Binding TotalPointsDisplay}" FontSize="30" HorizontalContentAlignment="Right"/>
+                                                <Label Grid.Column="1" Content="{Binding RoundPointsDisplay}" FontSize="30" HorizontalContentAlignment="Right"/>
                                                 <Button Grid.Column="1" Tag="{Binding}" Margin="10,2,2,2" Visibility="{Binding SetGroupButtonVisibility}" Click="SelectGroup_Click">Select</Button>
                                             </Grid>
                                         </Grid>
