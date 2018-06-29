@@ -26,4 +26,4 @@ _ReSharper*/
 .vs/
 #Nuget packages folder
 packages/
-
+bin/Release/Saves/

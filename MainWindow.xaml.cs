@@ -24,6 +24,8 @@ namespace FollowTheLeader
 	/// </summary>
 	public partial class MainWindow : Window, INotifyPropertyChanged
 	{
+		public bool bDebug = false;
+
 		///////////// Tunnables ///////////////////////////////////////////////////
 		const int NobodyEverybodySucessPoints = 2;
 		///////////////////////////////////////////////////////////////////////////
@@ -171,7 +173,10 @@ namespace FollowTheLeader
 		{
 			InitializeComponent();
 
-			SetupPlayersText.Text = "Ryan\r\nJames\r\nJake\r\nRandy\r\nCindy\r\nTony\r\nEmma\r\nPaul\r\nBob\r\nChar\r\nBeast\r\nMary\r\nMike";
+			if (bDebug)
+			{
+				SetupPlayersText.Text = "Ryan\r\nJames\r\nJake\r\nRandy\r\nCindy\r\nTony\r\nEmma\r\nPaul\r\nBob\r\nChar\r\nBeast\r\nMary\r\nMike";
+			}
 
 			GroupsDisplayList.Add(new PlayerData("test"));
 		}
@@ -182,7 +187,10 @@ namespace FollowTheLeader
 			AllGroupsItemControl.ItemsSource = GroupsDisplayList;
 			NowPlayingItemControl.ItemsSource = NowPlayingList;
 
-			SetupGroups();
+			if (bDebug)
+			{
+				SetupGroups();
+			}
 		}
 
 		private void SetPlayers_Click(object sender, RoutedEventArgs e)
@@ -211,8 +219,11 @@ namespace FollowTheLeader
 
 			AddGroups(players);
 
-			// Testing
-			SelectGroup(0, 0);
+			if (bDebug)
+			{
+				// Testing
+				SelectGroup(0, 0);
+			}
 		}
 
 		private void AddGroups(List<string> players)
