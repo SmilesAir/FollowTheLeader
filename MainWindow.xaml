@@ -103,7 +103,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                             
-                                                <Label Content="{Binding NowPlayingDisplayText}" FontSize="70"/>
+                                                <Label Content="{Binding NowPlayingDisplayText}" FontSize="40"/>
 
                                                 <ItemsControl Grid.Column="1" ItemsSource="{Binding HistoryButtons}" HorizontalAlignment="Left">
                                                     <ItemsControl.ItemsPanel>
@@ -113,12 +113,12 @@
                                                     </ItemsControl.ItemsPanel>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                                <ToggleButton Content="{Binding DisplayText}" FontSize="70" Foreground="{Binding TextColor}" IsChecked="{Binding Success}" Click="HistoryButton_Click" Tag="{Binding}"/>
+                                                                <ToggleButton Content="{Binding DisplayText}" FontSize="40" Foreground="{Binding TextColor}" IsChecked="{Binding Success}" Click="HistoryButton_Click" Tag="{Binding}"/>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
 
-                                                <Label Grid.Column="2" Content="{Binding RoundPointsDisplay}" FontSize="70" HorizontalContentAlignment="Right"/>
+                                                <Label Grid.Column="2" Content="{Binding RoundPointsDisplay}" FontSize="40" HorizontalContentAlignment="Right"/>
                                             </Grid>
                                     </Grid>
                                     </Border>
